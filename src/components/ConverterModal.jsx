@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { convert, formatCurrency, CURRENCIES, getCurrencyName } from '../utils/currency';
 
-export default function ConverterModal({ rates, onClose, currency }) {
+export default function ConverterModal({ rates, onClose, currency, rateMeta }) {
   const [amount, setAmount] = useState('1');
   const [fromCurrency, setFromCurrency] = useState('USD');
   const [toCurrency, setToCurrency] = useState('BS');
@@ -45,30 +45,17 @@ export default function ConverterModal({ rates, onClose, currency }) {
             </div>
 
             <div className="converter-arrow">
-              <button
-                onClick={swapCurrencies}
-                style={{
-                  background: 'transparent',
-                  color: 'var(--accent)',
-                  fontSize: '1.5rem',
-                  padding: '4px 12px',
-                  border: '1px solid var(--border)',
-                  borderRadius: '8px',
-                  cursor: 'pointer'
-                }}
-                title="Intercambiar"
-              >
+              <button onClick={swapCurrencies} style={{
+                background: 'transparent', color: 'var(--accent)', fontSize: '1.5rem',
+                padding: '4px 12px', border: '1px solid var(--border)', borderRadius: '8px', cursor: 'pointer'
+              }} title="Intercambiar">
                 ⇅
               </button>
             </div>
 
             <div className="converter-row">
-              <input
-                type="text"
-                value={formatCurrency(result, toCurrency)}
-                readOnly
-                style={{ background: 'var(--bg-card)', color: 'var(--accent)', fontWeight: '700' }}
-              />
+              <input type="text" value={formatCurrency(result, toCurrency)} readOnly
+                style={{ background: 'var(--bg-card)', color: 'var(--accent)', fontWeight: '700' }} />
               <select value={toCurrency} onChange={(e) => setToCurrency(e.target.value)}>
                 {CURRENCIES.map(c => (
                   <option key={c} value={c}>{c} - {getCurrencyName(c)}</option>
@@ -85,19 +72,10 @@ export default function ConverterModal({ rates, onClose, currency }) {
               </h4>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
                 {[10, 50, 100, 500, 1000, 5000].map(val => (
-                  <div
-                    key={val}
-                    onClick={() => { setAmount(val.toString()); }}
-                    style={{
-                      padding: '10px',
-                      background: 'var(--bg-input)',
-                      borderRadius: '8px',
-                      cursor: 'pointer',
-                      textAlign: 'center',
-                      border: '1px solid var(--border)',
-                      transition: 'all 0.2s'
-                    }}
-                  >
+                  <div key={val} onClick={() => setAmount(val.toString())} style={{
+                    padding: '10px', background: 'var(--bg-input)', borderRadius: '8px',
+                    cursor: 'pointer', textAlign: 'center', border: '1px solid var(--border)'
+                  }}>
                     <div style={{ fontSize: '0.9rem', fontWeight: '600', color: 'var(--text-primary)' }}>
                       {formatCurrency(val, fromCurrency)}
                     </div>
@@ -110,11 +88,63 @@ export default function ConverterModal({ rates, onClose, currency }) {
             </div>
           )}
 
+          {/* BCV vs Paralelo */}
+          {rateMeta && (
+            <div style={{ marginTop: '24px' }}>
+              <h4 style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '12px' }}>
+                BCV vs Paralelo
+              </h4>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+                <div style={{
+                  padding: '14px', background: 'var(--bg-input)', borderRadius: '10px', border: '1px solid var(--border)'
+                }}>
+                  <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                    Tasa Oficial BCV
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                      <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>USD/BS</span>
+                      <span style={{ fontSize: '0.9rem', fontWeight: '600', color: 'var(--accent)' }}>{formatCurrency(rateMeta.bcv.USD, 'BS')}</span>
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                      <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>EUR/BS</span>
+                      <span style={{ fontSize: '0.9rem', fontWeight: '600', color: 'var(--accent)' }}>{formatCurrency(rateMeta.bcv.EUR, 'BS')}</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div style={{
+                  padding: '14px', background: 'var(--bg-input)', borderRadius: '10px', border: '1px solid var(--border)'
+                }}>
+                  <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                    Mercado Paralelo
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                      <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>USD/BS</span>
+                      <span style={{ fontSize: '0.9rem', fontWeight: '600', color: '#feca57' }}>{formatCurrency(rateMeta.paralelo.USD, 'BS')}</span>
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                      <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>EUR/BS</span>
+                      <span style={{ fontSize: '0.9rem', fontWeight: '600', color: '#feca57' }}>{formatCurrency(rateMeta.paralelo.EUR, 'BS')}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {rateMeta.lastUpdate && (
+                <div style={{ textAlign: 'center', fontSize: '0.7rem', color: 'var(--text-muted)', marginTop: '10px' }}>
+                  Última actualización: {new Date(rateMeta.lastUpdate).toLocaleString('es-VE')} · Fuente: {rateMeta.source}
+                </div>
+              )}
+            </div>
+          )}
+
           {/* All rates table */}
           {rates && (
             <div style={{ marginTop: '24px' }}>
               <h4 style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '12px' }}>
-                Todas las Tasas (BCV)
+                Matriz de Conversiones (Tasa BCV)
               </h4>
               <div style={{ overflowX: 'auto' }}>
                 <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.8rem' }}>
@@ -132,8 +162,7 @@ export default function ConverterModal({ rates, onClose, currency }) {
                         <td style={{ padding: '8px', fontWeight: '600', color: 'var(--text-primary)' }}>{from}</td>
                         {CURRENCIES.map(to => (
                           <td key={to} style={{
-                            padding: '8px',
-                            textAlign: 'right',
+                            padding: '8px', textAlign: 'right',
                             color: from === to ? 'var(--text-muted)' : 'var(--text-primary)',
                             fontWeight: from === to ? 'normal' : '500'
                           }}>

@@ -13,20 +13,18 @@ export default function Dashboard() {
   const [transactions, setTransactions] = useState([]);
   const [currency, setCurrency] = useState('USD');
   const [rates, setRates] = useState(null);
+  const [rateMeta, setRateMeta] = useState(null);
   const [showConverter, setShowConverter] = useState(false);
   const [toast, setToast] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [ratesLoading, setRatesLoading] = useState(true);
 
   const STORAGE_KEY = `finanzas_${currentUser.uid}`;
 
   useEffect(() => {
     const saved = localStorage.getItem(STORAGE_KEY);
     if (saved) {
-      try {
-        setTransactions(JSON.parse(saved));
-      } catch (e) {
-        setTransactions([]);
-      }
+      try { setTransactions(JSON.parse(saved)); } catch { setTransactions([]); }
     }
     setLoading(false);
   }, [currentUser.uid]);
@@ -38,7 +36,12 @@ export default function Dashboard() {
   }, [transactions, loading, currentUser.uid]);
 
   useEffect(() => {
-    fetchBCVRates().then(setRates);
+    setRatesLoading(true);
+    fetchBCVRates().then(({ rates, meta }) => {
+      setRates(rates);
+      setRateMeta(meta);
+      setRatesLoading(false);
+    }).catch(() => setRatesLoading(false));
   }, []);
 
   const showToast = useCallback((message, type = 'success') => {
@@ -81,7 +84,6 @@ export default function Dashboard() {
   function importData(event) {
     const file = event.target.files[0];
     if (!file) return;
-
     const reader = new FileReader();
     reader.onload = (e) => {
       try {
@@ -90,7 +92,7 @@ export default function Dashboard() {
           setTransactions(prev => [...data, ...prev]);
           showToast(`${data.length} transacciones importadas`);
         }
-      } catch (err) {
+      } catch {
         showToast('Error al importar archivo', 'error');
       }
     };
@@ -98,13 +100,7 @@ export default function Dashboard() {
   }
 
   if (loading) {
-    return (
-      <div className="dashboard">
-        <div className="loading">
-          <div className="spinner"></div>
-        </div>
-      </div>
-    );
+    return <div className="dashboard"><div className="loading"><div className="spinner"></div></div></div>;
   }
 
   const monthTransactions = getMonthTransactions(transactions);
@@ -139,27 +135,42 @@ export default function Dashboard() {
       </div>
 
       {/* Exchange Rate Banner */}
-      {rates && (
+      {rates && rateMeta && (
         <div className="exchange-rate-banner">
           <div className="rate-info">
             <div className="rate-icon">🇻🇪</div>
             <div>
-              <div className="rate-label">Tasa BCV Hoy</div>
-              <div className="rate-value">1 USD = {formatCurrency(rates.USD.BS, 'BS')}</div>
+              <div className="rate-label">Tasas de Cambio Hoy</div>
+              <div className="rate-value">1 USD = {formatCurrency(rateMeta.bcv.USD, 'BS')} (BCV)</div>
             </div>
           </div>
           <div className="rate-rates">
             <div className="rate-item">
-              <div className="rate-item-label">EUR/BS</div>
-              <div className="rate-item-value">{formatCurrency(rates.EUR.BS, 'BS')}</div>
+              <div className="rate-item-label">USD Paralelo</div>
+              <div className="rate-item-value">{formatCurrency(rateMeta.paralelo.USD, 'BS')}</div>
+            </div>
+            <div className="rate-item">
+              <div className="rate-item-label">EUR BCV</div>
+              <div className="rate-item-value">{formatCurrency(rateMeta.bcv.EUR, 'BS')}</div>
+            </div>
+            <div className="rate-item">
+              <div className="rate-item-label">EUR Paralelo</div>
+              <div className="rate-item-value">{formatCurrency(rateMeta.paralelo.EUR, 'BS')}</div>
             </div>
             <div className="rate-item">
               <div className="rate-item-label">USD/EUR</div>
               <div className="rate-item-value">{rates.USD.EUR.toFixed(4)}</div>
             </div>
-            <div className="rate-item">
-              <div className="rate-item-label">USDT/BS</div>
-              <div className="rate-item-value">{formatCurrency(rates.USDT.BS, 'BS')}</div>
+          </div>
+        </div>
+      )}
+
+      {ratesLoading && (
+        <div className="exchange-rate-banner" style={{ opacity: 0.6 }}>
+          <div className="rate-info">
+            <div className="spinner" style={{ width: 20, height: 20, borderWidth: 2 }}></div>
+            <div style={{ marginLeft: 8, color: 'var(--text-secondary)', fontSize: '0.85rem' }}>
+              Cargando tasas de cambio...
             </div>
           </div>
         </div>
@@ -187,8 +198,7 @@ export default function Dashboard() {
           <div className="value">
             {monthTotals.totalIncome > 0
               ? ((1 - monthTotals.totalExpenses / monthTotals.totalIncome) * 100).toFixed(1) + '%'
-              : '0%'
-            }
+              : '0%'}
           </div>
           <div className="subtext">Ingresos menos gastos / Ingresos</div>
         </div>
@@ -196,33 +206,22 @@ export default function Dashboard() {
 
       {/* Main Content */}
       <div className="main-content">
-        {/* Left Column */}
         <div>
           <div className="card">
-            <div className="card-header">
-              <h3>Nueva Transacción</h3>
-            </div>
+            <div className="card-header"><h3>Nueva Transacción</h3></div>
             <div className="card-body">
               <TransactionForm onSubmit={addTransaction} rates={rates} />
             </div>
           </div>
 
           <div className="card" style={{ marginTop: '24px' }}>
-            <div className="card-header">
-              <h3>Metas de Presupuesto</h3>
-            </div>
+            <div className="card-header"><h3>Metas de Presupuesto</h3></div>
             <div className="card-body">
-              <BudgetGoals
-                transactions={monthTransactions}
-                rates={rates}
-                currency={currency}
-                showToast={showToast}
-              />
+              <BudgetGoals transactions={monthTransactions} rates={rates} currency={currency} showToast={showToast} />
             </div>
           </div>
         </div>
 
-        {/* Right Column */}
         <div>
           <div className="card">
             <div className="card-header">
@@ -238,11 +237,7 @@ export default function Dashboard() {
                 {transactions.length > 0 && (
                   <button
                     className="btn-logout"
-                    onClick={() => {
-                      if (window.confirm('¿Eliminar TODOS los datos? Esta acción no se puede deshacer.')) {
-                        clearAllData();
-                      }
-                    }}
+                    onClick={() => { if (window.confirm('¿Eliminar TODOS los datos?')) clearAllData(); }}
                     style={{ fontSize: '0.75rem', padding: '4px 10px', color: 'var(--danger)' }}
                   >
                     Limpiar Todo
@@ -250,30 +245,17 @@ export default function Dashboard() {
                 )}
               </div>
             </div>
-            <TransactionList
-              transactions={transactions}
-              onDelete={deleteTransaction}
-              rates={rates}
-              currency={currency}
-            />
+            <TransactionList transactions={transactions} onDelete={deleteTransaction} rates={rates} currency={currency} />
           </div>
         </div>
       </div>
 
       {/* Charts */}
-      <Charts
-        transactions={transactions}
-        rates={rates}
-        currency={currency}
-      />
+      <Charts transactions={transactions} rates={rates} currency={currency} />
 
       {/* Converter Modal */}
       {showConverter && (
-        <ConverterModal
-          rates={rates}
-          onClose={() => setShowConverter(false)}
-          currency={currency}
-        />
+        <ConverterModal rates={rates} onClose={() => setShowConverter(false)} currency={currency} rateMeta={rateMeta} />
       )}
 
       {/* Toast */}
