@@ -11,12 +11,9 @@
   "dependencies": {
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "firebase": "^10.7.0",
-    "react-router-dom": "^6.21.0",
     "chart.js": "^4.4.0",
     "react-chartjs-2": "^5.2.0",
-    "date-fns": "^3.0.0",
-    "lucide-react": "^0.294.0"
+    "date-fns": "^3.0.0"
   },
   "devDependencies": {
     "@vitejs/plugin-react": "^4.2.0",

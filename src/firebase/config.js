@@ -1,17 +1,20 @@
-import { initializeApp } from 'firebase/app';
-import { getAuth, GoogleAuthProvider } from 'firebase/auth';
-import { getFirestore } from 'firebase/firestore';
-
-const firebaseConfig = {
-  apiKey: "AIzaSyDemo_REPLACE_WITH_YOUR_OWN_KEY",
-  authDomain: "finanzas-personales-demo.firebaseapp.com",
-  projectId: "finanzas-personales-demo",
-  storageBucket: "finanzas-personales-demo.appspot.com",
-  messagingSenderId: "123456789",
-  appId: "1:123456789:web:abcdef123456"
-};
-
-const app = initializeApp(firebaseConfig);
-export const auth = getAuth(app);
-export const googleProvider = new GoogleAuthProvider();
-export const db = getFirestore(app);
+// Firebase not used - app uses localStorage for persistence
+// To migrate to Firebase later, uncomment and configure:
+//
+// import { initializeApp } from 'firebase/app';
+// import { getAuth, GoogleAuthProvider } from 'firebase/auth';
+// import { getFirestore } from 'firebase/firestore';
+//
+// const firebaseConfig = {
+//   apiKey: "YOUR_KEY",
+//   authDomain: "YOUR_PROJECT.firebaseapp.com",
+//   projectId: "YOUR_PROJECT",
+//   storageBucket: "YOUR_PROJECT.appspot.com",
+//   messagingSenderId: "YOUR_ID",
+//   appId: "YOUR_APP_ID"
+// };
+//
+// const app = initializeApp(firebaseConfig);
+// export const auth = getAuth(app);
+// export const googleProvider = new GoogleAuthProvider();
+// export const db = getFirestore(app);
